@@ -46,3 +46,20 @@ resource "aws_security_group" "instance_sg" {
   }
 
 }
+ 
+resource "aws_route53_zone" "domain_zones" {
+  for_each = toset(var.domain_names)
+
+  name = each.key
+}
+
+resource "aws_route53_record" "domain_records" {
+  for_each = { for id, name in var.domain_names: id => name }
+
+    zone_id  = aws_route53_zone.domain_zones[each.value].zone_id
+    name     = "www.${each.value}"
+    type     = "A"
+    ttl      = 300
+    records  = ["192.0.2.${each.key + 1}"]
+} 
+
